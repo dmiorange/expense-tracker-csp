@@ -476,6 +476,16 @@ Total: $0.00</div>
     var labels = Object.keys(breakdown).filter(k => breakdown[k] > 0);
     var values = labels.map(k => breakdown[k]);
 
+    // Add Savings slice if budget set and under budget
+    if (budgetAmount > 0) {
+      var totalSpent = values.reduce(function(s, v) { return s + v; }, 0);
+      var savings = budgetAmount - totalSpent;
+      if (savings > 0) {
+        labels.push('Savings');
+        values.push(parseFloat(savings.toFixed(2)));
+      }
+    }
+
     var noData = document.getElementById('noDataMsg');
     var canvas = document.getElementById('expenseChart');
 
@@ -496,6 +506,9 @@ Total: $0.00</div>
       '#667EEA','#764BA2','#F7971E','#56CCF2',
       '#6FCF97','#EB5757','#F2C94C','#9B51E0'
     ];
+    var bgColors = labels.map(function(l, i) {
+      return l === 'Savings' ? '#27AE60' : colors[i % colors.length];
+    });
 
     chartInstance = new Chart(ctx, {
       type: 'pie',
@@ -503,7 +516,7 @@ Total: $0.00</div>
         labels: labels,
         datasets: [{
           data:            values,
-          backgroundColor: colors.slice(0, labels.length),
+          backgroundColor: bgColors,
           borderWidth:     2,
           borderColor:     '#4B526B'
         }]
