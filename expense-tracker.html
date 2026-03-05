@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:       #4B526B;
+      --surface:  #353B51;
+      --card:     #71788E;
+      --accent:   #667EEA;
+      --accent2:  #764BA2;
+      --text:     #FFFFFF;
+      --muted:    #C8C8C8;
+      --danger:   #FF6464;
+      --input-bg: #FFFFFF;
+      --input-fg: #444;
+      --border:   #71788E;
+      --radius:   10px;
+      --w:        320px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #2b2f3e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    #app {
+      width: var(--w);
+      background: var(--bg);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+      position: relative;
+      height: 450px;
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      display: none;
+      width: 100%;
+      height: 450px;
+      padding: 12px 14px;
+      flex-direction: column;
+      gap: 7px;
+      animation: fadeIn .18s ease;
+      overflow: hidden;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .topbar-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: .05em;
+    }
+    .btn-settings {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      color: var(--text);
+      border-radius: 30px;
+      font-size: 9px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background .15s;
+    }
+    .btn-settings:hover { background: var(--card); }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ── INPUTS ── */
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      height: 30px;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      background: var(--input-bg);
+      color: var(--input-fg);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      padding: 0 12px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    select:focus, input:focus { border-color: var(--accent); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 7px;
+      transition: background .15s, transform .1s;
+      letter-spacing: .03em;
+    }
+    .btn:hover  { background: var(--card); }
+    .btn:active { transform: scale(.97); }
+    .btn-sm {
+      font-size: 12px;
+      padding: 7px;
+    }
+    .btn-outline {
+      background: transparent;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-outline:hover { background: rgba(102,126,234,.12); }
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: transparent;
+    }
+    .btn-danger:hover { background: rgba(255,100,100,.12); }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-row .btn { flex: 1; }
+
+    /* ── DISPLAYS ── */
+    .display-box {
+      background: #e0dcd8;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      color: #222;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      padding: 6px 12px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      min-height: 50px;
+    }
+    .display-box.small { font-size: 10px; min-height: 60px; }
+
+    /* ── ERROR ── */
+    .error-label {
+      font-size: 10px;
+      color: var(--danger);
+      text-align: center;
+      min-height: 10px;
+    }
+
+    /* ── STATUS ── */
+    .status-label {
+      background: var(--card);
+      border-radius: 30px;
+      color: var(--text);
+      font-size: 10px;
+      text-align: center;
+      padding: 6px 14px;
+      min-height: 28px;
+    }
+
+    /* ── HOME PAGE ── */
+    #homePage .home-hero {
+      background: var(--card);
+      border-radius: 14px;
+      color: var(--text);
+      text-align: center;
+      padding: 18px 14px;
+      margin: 10px 0;
+    }
+    #homePage .home-hero h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: 26px;
+      line-height: 1.2;
+      letter-spacing: -.01em;
+    }
+    #homePage .home-hero p {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── SEPARATOR ── */
+    .sep {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    /* ── NAV SECTION on settings ── */
+    .nav-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .nav-title {
+      font-size: 13px;
+      color: var(--text);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* ── CHART ── */
+    #statisticsPage {
+      height: 450px;
+      overflow: hidden;
+    }
+    .chart-wrapper {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+    #expenseChart {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .no-data-msg {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 30px 0;
+    }
+
+    /* ── RECENT TITLE STRIP ── */
+    .strip {
+      background: var(--card);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 30px;
+      padding: 4px 14px;
+      letter-spacing: .05em;
+    }
+
+    /* ── FOOTER NAV ── */
+    .bottom-nav {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+    .bottom-nav .btn { font-size: 11px; padding: 7px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ HOME PAGE ══ -->
+  <div id="homePage" class="screen active">
+    <div class="topbar">
+      <button class="btn-settings" onclick="goTo('settingsPage')">⚙ SETTINGS</button>
+    </div>
+    <div class="home-hero">
+      <h1>EXPENSE<br>TRACKER</h1>
+      <p>Track your spending and find<br>where your money goes.</p>
+    </div>
+    <button class="btn" onclick="goTo('expenseTracking')">START TRACKING</button>
+  </div>
+
+  <!-- ══ EXPENSE TRACKING ══ -->
+  <div id="expenseTracking" class="screen">
+    <div class="topbar">
+      <button class="btn-settings" onclick="goTo('settingsPage')">⚙ SETTINGS</button>
+      <span class="topbar-title">TRACKER</span>
+    </div>
+
+    <span class="section-label">Add New Expense</span>
+
+    <select id="categoryDropdown">
+      <option>Select Category</option>
+      <option>Food</option>
+      <option>Transport</option>
+      <option>Entertainment</option>
+      <option>Shopping</option>
+      <option>Utilities</option>
+      <option>Other</option>
+    </select>
+
+    <input type="number" id="amountInput" placeholder="Amount (e.g. 12.50)" min="0" step="0.01"/>
+    <input type="text"   id="descriptionInput" placeholder="Description (optional)"/>
+
+    <button class="btn" onclick="addExpense()">ADD EXPENSE</button>
+    <div class="error-label" id="errorLabel"></div>
+
+    <div class="display-box" id="breakdownDisplay">SPENDING BREAKDOWN:
+
+Total: $0.00</div>
+
+    <div class="strip">RECENT EXPENSES</div>
+    <div class="display-box small" id="recentDisplay"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline btn-sm" onclick="goTo('statisticsPage'); setTimeout(showExpenseChart,200)">📊 Statistics</button>
+      <button class="btn btn-danger  btn-sm" onclick="clearAll()">Clear All</button>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS PAGE ══ -->
+  <div id="settingsPage" class="screen">
+    <div class="topbar">
+      <span style="color:var(--text);font-size:14px;font-weight:600;">SETTINGS</span>
+    </div>
+
+    <span class="section-label">Display Currency</span>
+    <select id="currencyDropdown">
+      <option>USD ($)</option>
+      <option>EUR (€)</option>
+      <option>GBP (£)</option>
+    </select>
+
+    <span class="section-label">Monthly Budget (optional)</span>
+    <input type="number" id="budgetInput" placeholder="e.g. 500.00" min="0" step="0.01"/>
+
+    <div class="btn-row">
+      <button class="btn btn-sm" onclick="saveSettings()">Save</button>
+      <button class="btn btn-danger btn-sm" onclick="resetSettings()">Reset</button>
+    </div>
+
+    <div class="status-label" id="settingsStatusLabel"></div>
+
+    <hr class="sep"/>
+
+    <div class="nav-section">
+      <span class="nav-title">Navigate</span>
+      <button class="btn btn-sm" onclick="goTo('homePage')">🏠 Home</button>
+      <button class="btn btn-sm" onclick="goTo('expenseTracking')">💳 Expense Tracking</button>
+      <button class="btn btn-sm" onclick="goTo('statisticsPage'); setTimeout(showExpenseChart,200)">📊 Statistics</button>
+    </div>
+  </div>
+
+  <!-- ══ STATISTICS PAGE ══ -->
+  <div id="statisticsPage" class="screen">
+    <div class="topbar">
+      <button class="btn-settings" onclick="goTo('settingsPage')">⚙ SETTINGS</button>
+      <span class="topbar-title">STATISTICS</span>
+    </div>
+
+    <div class="chart-wrapper">
+      <canvas id="expenseChart"></canvas>
+      <div class="no-data-msg" id="noDataMsg" style="display:none">No expense data yet.<br>Add some expenses first!</div>
+    </div>
+
+    <button class="btn btn-sm btn-outline" onclick="showExpenseChart()">↻ Refresh Chart</button>
+    <button class="btn btn-sm" onclick="goTo('expenseTracking')">← Back to Tracking</button>
+  </div>
+
+</div>
+
+<script>
+  // ── STATE ──
+  var expenses       = [];
+  var currencySymbol = '$';
+  var budgetAmount   = 0;
+  var chartInstance  = null;
+
+  // ── NAVIGATION ──
+  function goTo(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+  }
+
+  // ── ADD EXPENSE ──
+  function addExpense() {
+    var category    = document.getElementById('categoryDropdown').value;
+    var amountRaw   = document.getElementById('amountInput').value;
+    var description = document.getElementById('descriptionInput').value.trim();
+    var amount      = parseFloat(amountRaw);
+    var errLabel    = document.getElementById('errorLabel');
+
+    if (category === 'Select Category' || isNaN(amount) || amount <= 0) {
+      errLabel.textContent = 'Please select a category and enter a valid amount.';
+      return;
+    }
+    errLabel.textContent = '';
+
+    expenses.push({ category, amount, description });
+
+    displayBreakdown();
+    updateRecent();
+
+    document.getElementById('amountInput').value = '';
+    document.getElementById('descriptionInput').value = '';
+    document.getElementById('categoryDropdown').value = 'Select Category';
+  }
+
+  // ── DISPLAY BREAKDOWN ──
+  function displayBreakdown() {
+    var total = expenses.reduce((s, e) => s + e.amount, 0);
+    var output = 'SPENDING BREAKDOWN:\n\n';
+    output += 'Total: ' + currencySymbol + total.toFixed(2);
+    if (budgetAmount > 0) {
+      var remaining = budgetAmount - total;
+      output += '\nRemaining: ' + currencySymbol + remaining.toFixed(2);
+    }
+    document.getElementById('breakdownDisplay').textContent = output;
+  }
+
+  // ── RECENT EXPENSES ──
+  function updateRecent() {
+    var output = '';
+    var count  = 0;
+    for (var i = expenses.length - 1; i >= 0 && count < 5; i--) {
+      var e = expenses[i];
+      output += e.category + ' — ' + currencySymbol + e.amount.toFixed(2);
+      if (e.description) output += ' (' + e.description + ')';
+      output += '\n';
+      count++;
+    }
+    document.getElementById('recentDisplay').textContent = output;
+  }
+
+  // ── CLEAR ALL ──
+  function clearAll() {
+    expenses = [];
+    displayBreakdown();
+    updateRecent();
+  }
+
+  // ── SETTINGS ──
+  function saveSettings() {
+    var sel = document.getElementById('currencyDropdown').value;
+    if      (sel === 'USD ($)') currencySymbol = '$';
+    else if (sel === 'EUR (€)') currencySymbol = '€';
+    else if (sel === 'GBP (£)') currencySymbol = '£';
+
+    var b = parseFloat(document.getElementById('budgetInput').value);
+    budgetAmount = isNaN(b) ? 0 : b;
+
+    document.getElementById('settingsStatusLabel').textContent = '✓ Settings saved.';
+    displayBreakdown();
+  }
+
+  function resetSettings() {
+    budgetAmount   = 0;
+    currencySymbol = '$';
+    document.getElementById('currencyDropdown').value = 'USD ($)';
+    document.getElementById('budgetInput').value = '';
+    document.getElementById('settingsStatusLabel').textContent = 'Reset complete.';
+    displayBreakdown();
+  }
+
+  // ── PIE CHART ──
+  function showExpenseChart() {
+    var breakdown = {};
+    expenses.forEach(function(e) {
+      breakdown[e.category] = (breakdown[e.category] || 0) + e.amount;
+    });
+
+    var labels = Object.keys(breakdown).filter(k => breakdown[k] > 0);
+    var values = labels.map(k => breakdown[k]);
+
+    var noData = document.getElementById('noDataMsg');
+    var canvas = document.getElementById('expenseChart');
+
+    if (labels.length === 0) {
+      canvas.style.display = 'none';
+      noData.style.display = 'block';
+      return;
+    }
+
+    canvas.style.display = 'block';
+    noData.style.display = 'none';
+
+    var ctx = canvas.getContext('2d');
+
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+    var colors = [
+      '#667EEA','#764BA2','#F7971E','#56CCF2',
+      '#6FCF97','#EB5757','#F2C94C','#9B51E0'
+    ];
+
+    chartInstance = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data:            values,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth:     2,
+          borderColor:     '#4B526B'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color:    '#fff',
+              font:     { family: 'DM Sans', size: 11 },
+              padding:  10,
+              boxWidth: 12
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return ' ' + currencySymbol + ctx.parsed.toFixed(2);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ── INIT ──
+  displayBreakdown();
+</script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>
